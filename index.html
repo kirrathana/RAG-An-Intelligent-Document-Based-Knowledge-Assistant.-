@@ -1,0 +1,201 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Valentius RAG Knowledge Assistant</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="style.css" />
+</head>
+<body>
+  <div class="app-shell">
+    <!-- Sidebar: Document Management & System Telemetry -->
+    <aside class="sidebar" id="sidebar">
+      <div class="brand">
+        <div class="brand-logo" aria-hidden="true">VK</div>
+        <div>
+          <h1>Valentius RAG</h1>
+          <p class="brand-subtitle">Kryptix AI Knowledge Engine</p>
+        </div>
+      </div>
+
+      <section class="panel status-panel" aria-label="System status">
+        <div class="panel-header">
+          <h2>System Status</h2>
+          <span class="status-pill" id="healthBadge">Checking...</span>
+        </div>
+        <div class="meta-grid">
+          <div class="meta-item">
+            <span class="meta-label">Total Documents</span>
+            <span class="meta-value" id="docCountValue">0</span>
+          </div>
+          <div class="meta-item">
+            <span class="meta-label">Total Indexed Chunks</span>
+            <span class="meta-value" id="chunkCountValue">0</span>
+          </div>
+        </div>
+      </section>
+
+      <section class="panel upload-panel" aria-label="Upload documents">
+        <div class="panel-header">
+          <h2>Upload Knowledge</h2>
+          <span class="ext-hint mono">.pdf .md .txt</span>
+        </div>
+        <form id="uploadForm" class="upload-form">
+          <label class="dropzone" id="dropzone" for="fileInput">
+            <input type="file" id="fileInput" name="file" accept=".pdf,.md,.txt" multiple hidden />
+            <span class="dropzone-title">Drop files or click to browse</span>
+            <span class="dropzone-sub" id="selectedFilesLabel">No files selected</span>
+          </label>
+          <div class="upload-actions">
+            <button type="submit" class="btn btn-primary" id="uploadBtn">Upload &amp; Index</button>
+            <button type="button" class="btn btn-secondary" id="reindexBtn" title="Scan data/documents for new files">Scan Folder</button>
+          </div>
+        </form>
+        <div class="upload-status hidden" id="uploadStatus"></div>
+      </section>
+
+      <section class="panel docs-panel" aria-label="Indexed documents">
+        <div class="panel-header">
+          <h2>Indexed Corpus</h2>
+          <button type="button" class="btn-link" id="refreshDocsBtn">Refresh</button>
+        </div>
+        <div class="doc-list" id="docList">
+          <p class="empty-state">Loading indexed documents...</p>
+        </div>
+      </section>
+    </aside>
+
+    <!-- Main Content Area -->
+    <main class="main-area">
+      <header class="topbar">
+        <nav class="tabs" role="tablist" aria-label="Assistant modes">
+          <button class="tab active" role="tab" aria-selected="true" data-tab="chat">Knowledge Chat</button>
+          <button class="tab" role="tab" aria-selected="false" data-tab="inspector">Retrieved Sources</button>
+          <button class="tab" role="tab" aria-selected="false" data-tab="compare">RAG vs. Plain LLM</button>
+        </nav>
+        <div class="topbar-controls">
+          <label class="topk-control" for="topKSelect">
+            <span>Top-K</span>
+            <select id="topKSelect">
+              <option value="3">3</option>
+              <option value="5" selected>5</option>
+              <option value="8">8</option>
+              <option value="10">10</option>
+            </select>
+          </label>
+        </div>
+      </header>
+
+      <!-- Tab 1: Knowledge Chat -->
+      <section class="tab-panel active" id="tab-chat">
+        <div class="chat-messages" id="chatMessages">
+          <div class="welcome-card">
+            <h2>Valentius RAG Knowledge Assistant</h2>
+            <p>
+              Ask technical questions grounded in the ingested knowledge base covering Python fundamentals,
+              LLMs, Generative AI, Google Gemini, embeddings, vector databases, ChromaDB, RAG, and semantic search.
+            </p>
+            <div class="prompt-chips">
+              <button type="button" class="chip" data-prompt="How does ChromaDB store metadata and perform similarity search?">How does ChromaDB perform similarity search?</button>
+              <button type="button" class="chip" data-prompt="Explain RETRIEVAL_DOCUMENT vs RETRIEVAL_QUERY task types in Gemini embeddings.">Gemini embedding task types</button>
+              <button type="button" class="chip" data-prompt="What are the Valentius Kryptix AI Engineering Internship RAG pipeline latency and chunking guidelines?">Valentius RAG engineering guidelines</button>
+              <button type="button" class="chip" data-prompt="What is the 2026 FIFA World Cup final score?">Test unanswerable question</button>
+            </div>
+          </div>
+        </div>
+
+        <div class="chat-error hidden" id="chatError" role="alert"></div>
+
+        <form class="chat-composer" id="chatForm">
+          <textarea
+            id="chatInput"
+            rows="2"
+            placeholder="Ask a question grounded in your indexed documents..."
+            required
+          ></textarea>
+          <button type="submit" class="btn btn-primary send-btn" id="sendBtn">
+            <span>Send</span>
+          </button>
+        </form>
+      </section>
+
+      <!-- Tab 2: Retrieved Sources & Chunk Inspector -->
+      <section class="tab-panel" id="tab-inspector">
+        <div class="inspector-toolbar">
+          <form id="retrieveForm" class="retrieve-form">
+            <input
+              type="text"
+              id="retrieveInput"
+              placeholder="Enter a semantic search query to inspect top-k retrieved chunks..."
+              required
+            />
+            <button type="submit" class="btn btn-primary" id="retrieveBtn">Search Chunks</button>
+            <button type="button" class="btn btn-secondary" id="sampleChunksBtn">Inspect Sample Chunks</button>
+          </form>
+        </div>
+        <div class="inspector-meta" id="inspectorMeta">
+          Run a semantic retrieval query or click a citation from chat to inspect retrieved chunks, page numbers, and cosine distances.
+        </div>
+        <div class="chunk-results" id="chunkResults"></div>
+      </section>
+
+      <!-- Tab 3: RAG vs. Non-RAG Comparison -->
+      <section class="tab-panel" id="tab-compare">
+        <div class="compare-intro">
+          <h2>RAG vs. Plain LLM Comparison</h2>
+          <p>
+            Send the identical question simultaneously to <strong>Plain LLM (Groq openai/gpt-oss-20b - no retrieval)</strong> and
+            <strong>Hybrid RAG (Gemini + ChromaDB + Groq)</strong> to verify how retrieval grounds answers in private or specialized documentation.
+          </p>
+        </div>
+
+        <form id="compareForm" class="retrieve-form">
+          <input
+            type="text"
+            id="compareInput"
+            value="According to the Valentius Kryptix Internal RAG Engineering Standard, what is the required chunk target, overlap, embedding dimension, and max P95 retrieval latency?"
+            placeholder="Enter a document-specific question to compare Plain LLM vs. RAG..."
+            required
+          />
+          <button type="submit" class="btn btn-primary" id="compareBtn">Run Comparison</button>
+        </form>
+
+        <div class="chat-error hidden" id="compareError" role="alert"></div>
+
+        <div class="compare-grid" id="compareGrid">
+          <article class="compare-card">
+            <div class="compare-card-header">
+              <span class="badge badge-neutral">Mode A</span>
+              <h3>Plain LLM (Groq - No Retrieval)</h3>
+              <div class="timing-badge mono hidden" id="plainTimingBadge"></div>
+            </div>
+            <div class="compare-body" id="plainAnswerBody">
+              <p class="empty-state">Run a comparison to view the ungrounded baseline response.</p>
+            </div>
+          </article>
+
+          <article class="compare-card compare-card-rag">
+            <div class="compare-card-header">
+              <span class="badge badge-cyan">Mode B</span>
+              <h3>Hybrid RAG (ChromaDB + Groq)</h3>
+              <div class="timing-badge mono hidden" id="ragTimingBadge"></div>
+            </div>
+            <div class="compare-body" id="ragAnswerBody">
+              <p class="empty-state">Run a comparison to view the retrieval-augmented response and citations.</p>
+            </div>
+            <div class="compare-sources" id="compareSources"></div>
+          </article>
+        </div>
+
+        <div class="compare-chunks-section" id="compareChunksSection"></div>
+      </section>
+    </main>
+  </div>
+
+  <script src="script.js"></script>
+</body>
+</html>
+

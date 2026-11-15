@@ -1,0 +1,23 @@
+# Environment variables & secrets
+.env
+.env.*
+!.env.example
+
+# Python virtual environments & caches
+.venv/
+venv/
+__pycache__/
+*.py[cod]
+*$py.class
+.pytest_cache/
+
+# Generated vector database & runtime logs
+data/chroma_db/
+*.log
+
+# OS & editor files
+.DS_Store
+Thumbs.db
+.vscode/
+.idea/
+

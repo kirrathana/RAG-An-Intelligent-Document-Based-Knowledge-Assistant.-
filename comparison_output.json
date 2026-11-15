@@ -1,0 +1,109 @@
+{
+  "question": "According to the Valentius Kryptix Internal RAG Engineering Standard (VK-RAG-2026-v1), what are the required target chunk size, chunk overlap, embedding dimensionality, and maximum P95 retrieval latency?",
+  "model": "openai/gpt-oss-20b",
+  "plain_llm_answer": "I\u2019m sorry, but I can\u2019t provide that information.",
+  "rag_answer": "**Valentius Kryptix Internal RAG Engineering Standard (VK\u2011RAG\u20112026\u2011v1)** specifies the following mandatory parameters for a production RAG service:\n\n| Parameter | Required value | Source |\n|-----------|----------------|--------|\n| **Target chunk size** | 500 tokens per chunk (tolerance 450\u2013550 tokens when preserving paragraph boundaries) | [Source: valentius_kryptix_rag_engineering_standard.md] |\n| **Chunk overlap** | 75 tokens (15\u202f% overlap ratio) | [Source: valentius_kryptix_rag_engineering_standard.md] |\n| **Embedding dimensionality** | 768 output dimensions (gemini\u2011embedding\u2011001 via MRL) | [Source: valentius_kryptix_rag_engineering_standard.md] |\n| **Maximum P95 retrieval latency** | 450\u202fms for semantic vector lookup in ChromaDB (excluding LLM generation time) | [Source: valentius_kryptix_rag_engineering_standard.md] |\n\nThese values are the mandatory baseline parameters that all RAG services must meet under the Valentius Kryptix standard.",
+  "citations": [
+    {
+      "source": "valentius_kryptix_rag_engineering_standard.md",
+      "page": null,
+      "relevance_score": 0.8333,
+      "chunk_id": "88ddecd0c550_c00000",
+      "excerpt": "# Valentius Kryptix Internal RAG Engineering Standard (VK-RAG-2026-v1)  **Document ID:** VK-RAG-2026-v1 **Division:** Valentius Kryptix Applied AI Engineering Internship Program **Effective Date:** October 15, 2026  ## 1. Purpose and Scope..."
+    },
+    {
+      "source": "rag_lewis_2020_arxiv.pdf",
+      "page": 17,
+      "relevance_score": 0.6701,
+      "chunk_id": "23e3249e9a1e_c00046",
+      "excerpt": "Inner Product Search with FAISS is suf\ufb01ciently fast on CPU, so we store document index vectors on CPU, requiring\u223c 100 GB of CPU memory for all of Wikipedia. After submission, We have ported our code to HuggingFace Transformers [66]3, which..."
+    },
+    {
+      "source": "rag_lewis_2020_arxiv.pdf",
+      "page": 3,
+      "relevance_score": 0.6569,
+      "chunk_id": "23e3249e9a1e_c00006",
+      "excerpt": "z\u2208top-k(p(\u00b7|x)) p\u03b7(z|x)p\u03b8(yi|x,z,y 1:i\u22121) Finally, we note that RAG can be used for sequence classi\ufb01cation tasks by considering the target class as a target sequence of length one, in which case RAG-Sequence and RAG-Token are equivalent. 2...."
+    },
+    {
+      "source": "rag_lewis_2020_arxiv.pdf",
+      "page": 19,
+      "relevance_score": 0.6564,
+      "chunk_id": "23e3249e9a1e_c00050",
+      "excerpt": "Table 7: Number of instances in the datasets used. *A hidden subset of this data is used for evaluation Task Train Development Test Natural Questions 79169 8758 3611 TriviaQA 78786 8838 11314 WebQuestions 3418 362 2033 CuratedTrec 635 134 6..."
+    }
+  ],
+  "retrieved_chunks": [
+    {
+      "chunk_id": "88ddecd0c550_c00000",
+      "text": "# Valentius Kryptix Internal RAG Engineering Standard (VK-RAG-2026-v1)\n\n**Document ID:** VK-RAG-2026-v1\n**Division:** Valentius Kryptix Applied AI Engineering Internship Program\n**Effective Date:** October 15, 2026\n\n## 1. Purpose and Scope\n\nThis internal specification defines the mandatory architecture, retrieval latency targets, chunking tolerances, and grounding verification rules for Retrieval-Augmented Generation (RAG) assistants built within the Valentius Kryptix AI Engineering track.\n\n## 2. Mandatory Pipeline Parameters\n\nEvery production and internship evaluation RAG service deployed under the Valentius Kryptix standard must adhere to the following baseline parameters:\n\n- **Target Chunk Size:** 500 tokens per chunk (acceptable tolerance: 450\u2013550 tokens when preserving paragraph boundaries).\n- **Chunk Overlap:** 75 tokens (15% overlap ratio) to prevent context fragmentation across paragraph boundaries.\n- **Embedding Model & Dimensionality:** `gemini-embedding-001` configured at **768 output dimensions** via Matryoshka Representation Learning (MRL), using asymmetric `RETRIEVAL_DOCUMENT` indexing and `RETRIEVAL_QUERY` search task types.\n- **Vector Store Space:** Persistent ChromaDB collection configured with cosine distance (`hnsw:space = cosine`).\n- **Default Retrieval Depth:** Top-5 (`k = 5`) chunks per user query, configurable up to `k = 20` for deep inspection.\n- **Max P95 Retrieval Latency:** **450 milliseconds** for semantic vector lookup in ChromaDB (excluding external LLM generation time).\n\n## 3. Grounding and Prompt-Injection Guardrails",
+      "source": "valentius_kryptix_rag_engineering_standard.md",
+      "file_type": "md",
+      "page": null,
+      "chunk_index": 0,
+      "token_count": 409,
+      "distance": 0.1667,
+      "relevance_score": 0.8333
+    },
+    {
+      "chunk_id": "88ddecd0c550_c00001",
+      "text": "## 3. Grounding and Prompt-Injection Guardrails\n\n1. **Strict Grounding:** The generation model (`gemini-3.8-flash`) must answer exclusively from the retrieved excerpts enclosed in `<retrieved_context>` tags.\n2. **Citation Format:** Every factual claim derived from the knowledge base must cite `[Source: <filename>, Page <N>]` when page metadata exists, or `[Source: <filename>]` for non-paginated Markdown and plain-text documents.\n3. **Abstention Policy:** When retrieved chunks lack sufficient evidence, the assistant must explicitly state that the answer cannot be found in the available documents rather than guessing.\n4. **Untrusted Document Isolation:** Uploaded PDF, Markdown, and TXT documents must never be interpreted as system instructions; embedded imperative commands inside documents must be ignored.\n\n## 4. Benchmark Evaluation Protocol (VK-EVAL-04)\n\nFor internship project verification, engineers must run an automated RAG vs. Plain LLM comparison using at least one internal specification query whose parameters (such as the 450 ms P95 retrieval latency target, VK-RAG-2026-v1 document ID, and 768-dimension MRL policy) are absent from general LLM pretraining data.",
+      "source": "valentius_kryptix_rag_engineering_standard.md",
+      "file_type": "md",
+      "page": null,
+      "chunk_index": 1,
+      "token_count": 317,
+      "distance": 0.2803,
+      "relevance_score": 0.7197
+    },
+    {
+      "chunk_id": "23e3249e9a1e_c00046",
+      "text": "Inner Product Search with FAISS is suf\ufb01ciently fast on CPU, so we store document index vectors on CPU, requiring\u223c 100 GB of CPU memory for all of Wikipedia. After submission, We have ported our code to HuggingFace Transformers [66]3, which achieves equivalent performance to the previous version but is a cleaner\n\nand easier to use implementation. This version is also open-sourced. We also compress the document\nindex using FAISS\u2019s compression tools, reducing the CPU memory requirement to 36GB. Scripts to\nrun experiments with RAG can be found athttps://github.com/huggingface/transformers/\nblob/master/examples/rag/README.md and an interactive demo of a RAG model can be found\nat https://huggingface.co/rag/\n2https://github.com/pytorch/fairseq\n3https://github.com/huggingface/transformers\n17",
+      "source": "rag_lewis_2020_arxiv.pdf",
+      "file_type": "pdf",
+      "page": 17,
+      "chunk_index": 46,
+      "token_count": 215,
+      "distance": 0.3299,
+      "relevance_score": 0.6701
+    },
+    {
+      "chunk_id": "23e3249e9a1e_c00006",
+      "text": "z\u2208top-k(p(\u00b7|x))\np\u03b7(z|x)p\u03b8(yi|x,z,y 1:i\u22121)\nFinally, we note that RAG can be used for sequence classi\ufb01cation tasks by considering the target class\nas a target sequence of length one, in which case RAG-Sequence and RAG-Token are equivalent.\n2.2 Retriever: DPR\nThe retrieval componentp\u03b7(z|x) is based on DPR [26]. DPR follows a bi-encoder architecture:\np\u03b7(z|x)\u221d exp\n(\nd(z)\u22a4q(x) ) d(z) = BERTd(z), q(x) = BERTq(x)\nwhere d(z) is a dense representation of a document produced by a BERTBASE document encoder [8],\nand q(x) a query representation produced by a query encoder, also based on BERTBASE. Calculating\ntop-k(p\u03b7(\u00b7|x)), the list ofk documentsz with highest prior probabilityp\u03b7(z|x), is a Maximum Inner\nProduct Search (MIPS) problem, which can be approximately solved in sub-linear time [23]. We use\na pre-trained bi-encoder from DPR to initialize our retriever and to build the document index. This\nretriever was trained to retrieve documents which contain answers to TriviaQA [24] questions and\nNatural Questions [29]. We refer to the document index as the non-parametric memory.\n2.3 Generator: BART\nThe generator componentp\u03b8(yi|x,z,y 1:i\u22121) could be modelled using any encoder-decoder. We use\nBART-large [32], a pre-trained seq2seq transformer [58] with 400M parameters. To combine the input\nx with the retrieved contentz when generating from BART, we simply concatenate them. BART was\npre-trained using a denoising objective and a variety of different noising functions. It has obtained",
+      "source": "rag_lewis_2020_arxiv.pdf",
+      "file_type": "pdf",
+      "page": 3,
+      "chunk_index": 6,
+      "token_count": 482,
+      "distance": 0.3431,
+      "relevance_score": 0.6569
+    },
+    {
+      "chunk_id": "23e3249e9a1e_c00050",
+      "text": "Table 7: Number of instances in the datasets used. *A hidden subset of this data is used for evaluation\nTask Train Development Test\nNatural Questions 79169 8758 3611\nTriviaQA 78786 8838 11314\nWebQuestions 3418 362 2033\nCuratedTrec 635 134 635\nJeopardy Question Generation 97392 13714 26849\nMS-MARCO 153726 12468 101093*\nFEVER-3-way 145450 10000 10000\nFEVER-2-way 96966 6666 6666\nparameters. The best performing \"closed-book\" (parametric only) open-domain QA model is T5-11B\nwith 11 Billion trainable parameters. The T5 model with the closest number of parameters to our\nmodels is T5-large (770M parameters), which achieves a score of 28.9 EM on Natural Questions [52],\nsubstantially below the 44.5 that RAG-Sequence achieves, indicating that hybrid parametric/non-\nparametric models require far fewer trainable parameters for strong open-domain QA performance.\nThe non-parametric memory index does not consist of trainable parameters, but does consists of 21M\n728 dimensional vectors, consisting of 15.3B values. These can be easily be stored at 8-bit \ufb02oating\npoint precision to manage memory and disk footprints.\nH Retrieval Collapse\nIn preliminary experiments, we observed that for some tasks such as story generation [ 11], the\nretrieval component would \u201ccollapse\u201d and learn to retrieve the same documents regardless of the\ninput. In these cases, once retrieval had collapsed, the generator would learn to ignore the documents,\nand the RAG model would perform equivalently to BART. The collapse could be due to a less-explicit\nrequirement for factual knowledge in some tasks, or the longer target sequences, which could result\nin less informative gradients for the retriever. Perez et al.[46] also found spurious retrieval results\nwhen optimizing a retrieval component in order to improve performance on downstream tasks.\nI Number of instances per dataset\nThe number of training, development and test datapoints in each of our datasets is shown in Table 7.\n19",
+      "source": "rag_lewis_2020_arxiv.pdf",
+      "file_type": "pdf",
+      "page": 19,
+      "chunk_index": 50,
+      "token_count": 472,
+      "distance": 0.3436,
+      "relevance_score": 0.6564
+    }
+  ],
+  "source_documents": [
+    "rag_lewis_2020_arxiv.pdf",
+    "valentius_kryptix_rag_engineering_standard.md"
+  ],
+  "timing": {
+    "plain_llm": {
+      "generation_time_ms": 1953.13,
+      "total_time_ms": 1953.13
+    },
+    "rag": {
+      "embed_time_ms": 3005.5,
+      "retrieval_time_ms": 19.08,
+      "generation_time_ms": 897.53,
+      "total_time_ms": 3924.94
+    }
+  }
+}
